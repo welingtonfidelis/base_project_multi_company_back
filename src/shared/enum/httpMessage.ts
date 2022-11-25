@@ -4,7 +4,19 @@ export const HttpMessageEnum = {
     name: "NO_AUTH",
     message: "Not authenticated",
     code: 401,
-    use: "general validation",
+    use: "/general-validation;",
+  },
+  NOT_UPDATED_NOT_FOUND: {
+    name: "NOT_UPDATED_NOT_FOUND",
+    message: "Cannot update because the item was not found",
+    code: 400,
+    use: "/general-validation;",
+  },
+  NOT_DELETE_NOT_FOUND: {
+    name: "NOT_DELETE_NOT_FOUND",
+    message: "Cannot delete because the item was not found",
+    code: 400,
+    use: "/general-validation;",
   },
 
   // USERS
@@ -64,21 +76,33 @@ export const HttpMessageEnum = {
   },
   CAN_NOT_DELETE_YOURSELF: {
     name: "CAN_NOT_DELETE_YOURSELF",
-    message: "Can not delete your own user",
+    message: "Cannot delete your own user",
     code: 400,
     use: "/users;",
   },
 
   // COMPANIES
+  INVALID_COMPANY_ID: {
+    name: "INVALID_COMPANY_ID",
+    message: "Invalid company id",
+    code: 404,
+    use: "/companies;",
+  },
   CAN_NOT_BLOCK_YOURSELF_COMPANY: {
     name: "CAN_NOT_BLOCK_YOURSELF_COMPANY",
-    message: "Can not block your own company",
+    message: "Cannot block your own company",
     code: 400,
     use: "/companies;",
   },
   NAME_ALREADY_USED: {
     name: "NAME_ALREADY_USED",
     message: "Name already in use",
+    code: 400,
+    use: "/companies;",
+  },
+  BLOCKED_COMPANY: {
+    name: "BLOCKED_COMPANY",
+    message: "Blocked company",
     code: 400,
     use: "/companies;",
   },

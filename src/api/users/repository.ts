@@ -1,6 +1,11 @@
-import { User } from "@prisma/client";
 import { prisma } from "../../dbCLient";
-import { ListAllIgnoreIdPayload, UpdateUserPayload } from "./types";
+import {
+  CreateUserData,
+  DeleteUserByIdData,
+  FindUserByIdData,
+  ListAllIgnoreIdData,
+  UpdateUserData,
+} from "./types";
 
 const userRepository = {
   findByUserName(username: string) {
@@ -21,23 +26,35 @@ const userRepository = {
     });
   },
 
-  findById(id: number) {
-    return prisma.user.findUnique({ where: { id } });
+  findById(data: FindUserByIdData) {
+    const { id, company_id } = data;
+    return prisma.user.findFirst({ where: { AND: [{ company_id }, { id }] } });
   },
 
-  updateById(id: number, data: Partial<User>) {
-    return prisma.user.update({ where: { id }, data });
+  updateById(payload: UpdateUserData) {
+    const { id, company_id, ...data } = payload;
+    return prisma.user.updateMany({
+      where: { AND: [{ company_id }, { id }] },
+      data,
+    });
   },
 
-  create(data: Omit<User, "id" | "created_at" | "updated_at">) {
+  create(data: CreateUserData) {
     return prisma.user.create({ data });
   },
 
-  async listAllIgnoreId(payload: ListAllIgnoreIdPayload) {
-    const { logged_user_id, page, limit, filter_by_id, filter_by_name } = payload;
+  async listAllIgnoreId(payload: ListAllIgnoreIdData) {
+    const {
+      company_id,
+      logged_user_id,
+      page,
+      limit,
+      filter_by_id,
+      filter_by_name,
+    } = payload;
     const offset = (page - 1) * limit;
 
-    const where: any = { AND: [] };
+    const where: any = { AND: [{ company_id }] };
 
     if (filter_by_id && filter_by_id !== logged_user_id) {
       where.AND.push({ id: filter_by_id });
@@ -63,8 +80,9 @@ const userRepository = {
     return { users, total };
   },
 
-  deleteById(id: number) {
-    return prisma.user.delete({ where: { id } });
+  deleteById(data: DeleteUserByIdData) {
+    const { company_id, id } = data;
+    return prisma.user.deleteMany({ where: { AND: [{ company_id }, { id }] } });
   },
 };
 

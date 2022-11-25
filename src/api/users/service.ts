@@ -10,9 +10,12 @@ import { createToken } from "../../shared/service/token";
 import { userRepository } from "./repository";
 import {
   CreateUserPayload,
+  DeleteUserByIdPayload,
+  FindUserByIdPayload,
   ListAllIgnoreIdPayload,
   ResetPasswordPayload,
   UpdatePasswordPayload,
+  UpdateUserData,
   UpdateUserPayload,
 } from "./types";
 
@@ -31,8 +34,8 @@ const { ENCRYPT_SALT, SOURCE_EMAIL, URL_FRONT_RESET_PASSWORD, JSON_SECRET } =
   config;
 
 const userService = {
-  getUserByIdService(id: number) {
-    return findById(id);
+  getUserByIdService(payload: FindUserByIdPayload) {
+    return findById(payload);
   },
 
   getUserByUsernameService(username: string) {
@@ -48,7 +51,7 @@ const userService = {
   },
 
   async updateUserService(payload: UpdateUserPayload) {
-    const { id, file, delete_image } = payload;
+    const { id, company_id,  file, delete_image } = payload;
 
     if (file) {
       const { Location, Key } = await uploadImage(
@@ -59,8 +62,8 @@ const userService = {
 
       payload.image_url = Location;
       payload.image_key = Key;
-    } else if (delete_image === "true") {
-      const selectedUser = await findById(id);
+    } else if (delete_image) {
+      const selectedUser = await findById({ id, company_id });
 
       if (selectedUser && selectedUser.image_key) {
         await deleteFile(selectedUser.image_key);
@@ -77,7 +80,7 @@ const userService = {
     delete payload.delete_image;
     delete payload.file;
 
-    return updateById(id, payload);
+    return updateById(payload as UpdateUserData);
   },
 
   async createUserService(payload: CreateUserPayload) {
@@ -96,14 +99,14 @@ const userService = {
   },
 
   async updateUserPasswordService(payload: UpdatePasswordPayload) {
-    const { id, new_password } = payload;
+    const { id, company_id, new_password } = payload;
 
     const password = bcrypt.hashSync(new_password, ENCRYPT_SALT);
-    return updateById(id, { password });
+    return updateById({ id, company_id, password });
   },
 
   async resetUserPasswordService(payload: ResetPasswordPayload) {
-    const { id, name, email, language } = payload;
+    const { id, company_id, name, email, language } = payload;
 
     const htmlTemplatePath = resolve(
       __dirname,
@@ -115,7 +118,7 @@ const userService = {
       language,
       "resetPassword.hbs"
     );
-    const token = createToken({ id }, JSON_SECRET, 15);
+    const token = createToken({ id, company_id }, JSON_SECRET, 15);
     const htmlTemplate = fs.readFileSync(htmlTemplatePath).toString("utf8");
     const html = handlebars.compile(htmlTemplate)({
       name,
@@ -134,8 +137,8 @@ const userService = {
     return listAllIgnoreId(payload);
   },
 
-  deleteUserService(id: number) {
-    return deleteById(id);
+  deleteUserService(payload: DeleteUserByIdPayload) {
+    return deleteById(payload);
   },
 };
 

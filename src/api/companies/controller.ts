@@ -117,7 +117,7 @@ const companyController = {
       }
     }
 
-    const payload: UpdateCompanyPayload = { ...body, id } as UpdateCompanyPayload;
+    const payload = { ...body, id } as UpdateCompanyPayload;
 
     if (body.is_blocked) payload.is_blocked = body.is_blocked === 'true';
 

@@ -3,6 +3,7 @@ import dateFnsAdd from "date-fns/add";
 import bcrypt from "bcryptjs";
 
 import { userService } from "./service";
+import { companyService } from "../companies/service";
 import { createToken, validateToken } from "../../shared/service/token";
 import { config } from "../../config";
 import {
@@ -12,6 +13,7 @@ import {
   UpdatePasswordBody,
   UpdateResetedPasswordBody,
   UpdateUserBody,
+  UpdateUserPayload,
 } from "./types";
 import { Role } from "@prisma/client";
 import { AppError } from "../../errors/AppError";
@@ -29,6 +31,7 @@ const {
   deleteUserService,
   createUserService,
 } = userService;
+const { getCompanyByIdService } = companyService;
 
 const { ADMIN } = Role;
 const { JSON_SECRET, SESSION_DURATION_HOURS } = config;
@@ -43,6 +46,10 @@ const {
   EMAIL_ALREADY_USED,
   USERNAME_ALREADY_USED,
   USER_NOT_FOUND,
+  INVALID_COMPANY_ID,
+  BLOCKED_COMPANY,
+  NOT_UPDATED_NOT_FOUND,
+  NOT_DELETE_NOT_FOUND
 } = HttpMessageEnum;
 
 const canApplyPermissions = (
@@ -74,10 +81,26 @@ const userController = {
         .json({ message: INVALID_USERNAME_OR_EMAIL.message });
     }
 
+    const selectedCompany = await getCompanyByIdService(
+      selectedUser.company_id
+    );
+
+    if (!selectedCompany) {
+      return res
+        .status(INVALID_COMPANY_ID.code)
+        .json({ message: INVALID_COMPANY_ID.message });
+    }
+
     if (selectedUser.is_blocked) {
       return res
         .status(BLOCKED_USER.code)
         .json({ message: BLOCKED_USER.message });
+    }
+
+    if (selectedCompany.is_blocked) {
+      return res
+        .status(BLOCKED_COMPANY.code)
+        .json({ message: BLOCKED_COMPANY.message });
     }
 
     const validPassword = bcrypt.compareSync(password, selectedUser.password);
@@ -87,9 +110,9 @@ const userController = {
         .json({ message: INVALID_PASSWORD.message });
     }
 
-    const { id, name, email, permissions } = selectedUser;
+    const { id, company_id, permissions } = selectedUser;
     const cookieData = createToken(
-      { id, permissions },
+      { id, company_id, permissions },
       JSON_SECRET,
       SESSION_DURATION_HOURS * 60 + 1
     );
@@ -103,7 +126,23 @@ const userController = {
       }
     );
 
-    return res.json({ name, email, permissions });
+    const user = {
+      id: selectedUser.id,
+      name: selectedUser.name,
+      email: selectedUser.email,
+      permissions: selectedUser.permissions,
+      image_url: selectedUser.image_url,
+    };
+    const company = {
+      id: selectedCompany.id,
+      name: selectedCompany.name,
+      name_key: selectedCompany.name_key,
+      email: selectedCompany.email,
+      phone: selectedCompany.phone,
+      image_url: selectedCompany.image_url,
+    };
+
+    return res.json({ user, company });
   },
 
   logout(req: Request, res: Response) {
@@ -144,9 +183,9 @@ const userController = {
   },
 
   async getProfile(req: Request, res: Response) {
-    const { id } = req.authenticated_user;
+    const { id, company_id } = req.authenticated_user;
 
-    const selectedUser = await getUserByIdService(id);
+    const selectedUser = await getUserByIdService({ id, company_id });
 
     if (!selectedUser) return res.json({});
 
@@ -181,17 +220,22 @@ const userController = {
       }
     }
 
-    await updateUserService({ ...body, file, id });
+    const payload = { ...body, file, id } as UpdateUserPayload;
+
+    if (body.is_blocked) payload.is_blocked = body.is_blocked === "true";
+    if (body.delete_image) payload.delete_image = body.delete_image === "true";
+
+    await updateUserService(payload);
 
     return res.status(204).json({});
   },
 
   async updateProfilePassword(req: Request, res: Response) {
-    const { id } = req.authenticated_user;
+    const { id, company_id } = req.authenticated_user;
     const body = req.body as UpdatePasswordBody;
     const { old_password, new_password } = body;
 
-    const selectedUser = await getUserByIdService(id);
+    const selectedUser = await getUserByIdService({ id, company_id });
 
     if (!selectedUser) {
       return res
@@ -209,7 +253,7 @@ const userController = {
         .json({ message: INVALID_OLD_PASSWORD.message });
     }
 
-    await updateUserPasswordService({ id, new_password });
+    await updateUserPasswordService({ id, company_id, new_password });
 
     return res.status(204).json({});
   },
@@ -235,8 +279,8 @@ const userController = {
         .json({ message: BLOCKED_USER.message });
     }
 
-    const { id, name, email } = selectedUser;
-    await resetUserPasswordService({ id, name, email, language });
+    const { id, company_id, name, email } = selectedUser;
+    await resetUserPasswordService({ id, company_id, name, email, language });
 
     return res.status(204).json({});
   },
@@ -245,8 +289,8 @@ const userController = {
     const { new_password, token } = req.body as UpdateResetedPasswordBody;
 
     try {
-      const { id } = validateToken(token, JSON_SECRET) as any;
-      await updateUserPasswordService({ id, new_password });
+      const { id, company_id } = validateToken(token, JSON_SECRET) as any;
+      await updateUserPasswordService({ id, company_id, new_password });
 
       return res.status(204).json({});
     } catch (error) {
@@ -257,7 +301,7 @@ const userController = {
   },
 
   async list(req: Request, res: Response) {
-    const { id } = req.authenticated_user;
+    const { id, company_id } = req.authenticated_user;
     const page = parseInt(req.query.page as string);
     const limit = parseInt(req.query.limit as string);
     const filter_by_id = req.query.filter_by_id
@@ -268,6 +312,7 @@ const userController = {
       : undefined;
 
     const users = await listUsersService({
+      company_id,
       logged_user_id: id,
       page,
       limit,
@@ -287,8 +332,9 @@ const userController = {
 
   async getById(req: Request, res: Response) {
     const id = parseInt(req.params.id);
+    const { company_id } = req.authenticated_user;
 
-    const selectedUser = await getUserByIdService(id);
+    const selectedUser = await getUserByIdService({ id, company_id });
 
     if (!selectedUser) return res.status(404).json({});
 
@@ -300,20 +346,53 @@ const userController = {
   async update(req: Request, res: Response) {
     const id = parseInt(req.params.id);
     const body = req.body as UpdateUserBody;
+    const { permissions, username, email, is_blocked, delete_image } = body;
+    const { permissions: loggedUserPermissions, company_id } =
+      req.authenticated_user;
+    const { file } = req;
 
-    if (body.permissions) {
-      const { permissions } = req.authenticated_user;
-      canApplyPermissions(permissions, body.permissions);
+    if (permissions) {
+      canApplyPermissions(loggedUserPermissions, permissions);
     }
 
-    await updateUserService({ ...body, id });
+    if (username) {
+      const selectedUser = await getUserByUsernameService(username);
+
+      if (selectedUser && selectedUser.id !== id) {
+        return res
+          .status(USERNAME_ALREADY_USED.code)
+          .json({ message: USERNAME_ALREADY_USED.message });
+      }
+    }
+
+    if (email) {
+      const selectedUser = await getUserByEmailService(email);
+
+      if (selectedUser && selectedUser.id !== id) {
+        return res
+          .status(EMAIL_ALREADY_USED.code)
+          .json({ message: EMAIL_ALREADY_USED.message });
+      }
+    }
+
+    const payload = { ...body, file, id, company_id } as UpdateUserPayload;
+
+    if (is_blocked) payload.is_blocked = is_blocked === "true";
+    if (delete_image) payload.delete_image = delete_image === "true";
+
+    const { count } = await updateUserService(payload);
+    if (!count) {
+      return res
+        .status(NOT_UPDATED_NOT_FOUND.code)
+        .json({ message: NOT_UPDATED_NOT_FOUND.message });
+    }
 
     return res.status(204).json({});
   },
 
   async delete(req: Request, res: Response) {
     const id = parseInt(req.params.id);
-    const { id: loggedUserId } = req.authenticated_user;
+    const { id: loggedUserId, company_id } = req.authenticated_user;
 
     if (id === loggedUserId) {
       return res
@@ -321,7 +400,12 @@ const userController = {
         .json({ message: CAN_NOT_DELETE_YOURSELF.message });
     }
 
-    await deleteUserService(id);
+    const { count } = await deleteUserService({ id, company_id });
+    if (!count) {
+      return res
+        .status(NOT_DELETE_NOT_FOUND.code)
+        .json({ message: NOT_DELETE_NOT_FOUND.message });
+    }
 
     return res.status(204).json({});
   },
