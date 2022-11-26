@@ -17,7 +17,7 @@ const companyRepository = {
   updateById(payload: UpdateCompanyData) {
     const { id, ...data } = payload;
 
-    return prisma.company.update({ where: { id }, data });
+    return prisma.company.updateMany({ where: { id }, data });
   },
 
   create(payload: CreateCompanyData) {

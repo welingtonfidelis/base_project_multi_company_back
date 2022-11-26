@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 
 import { companyService } from "./service";
-import { CreateCompanyBody, UpdateCompanyBody, UpdateCompanyPayload } from "./types";
+import {
+  CreateCompanyBody,
+  UpdateCompanyBody,
+  UpdateCompanyPayload,
+} from "./types";
 import { HttpMessageEnum } from "../../shared/enum/httpMessage";
 
 const {
@@ -17,6 +21,7 @@ const {
   CAN_NOT_BLOCK_YOURSELF_COMPANY,
   NAME_ALREADY_USED,
   EMAIL_ALREADY_USED,
+  NOT_UPDATED_NOT_FOUND,
 } = HttpMessageEnum;
 
 const companyController = {
@@ -40,7 +45,11 @@ const companyController = {
         .json({ message: EMAIL_ALREADY_USED.message });
     }
 
-    const newCompany = await createCompanyService({ ...body, is_blocked: body.is_blocked === 'true', file });
+    const newCompany = await createCompanyService({
+      ...body,
+      is_blocked: body.is_blocked === "true",
+      file,
+    });
 
     const { company, user } = newCompany;
     const { id: company_id } = company;
@@ -119,9 +128,14 @@ const companyController = {
 
     const payload = { ...body, id } as UpdateCompanyPayload;
 
-    if (body.is_blocked) payload.is_blocked = body.is_blocked === 'true';
+    if (body.is_blocked) payload.is_blocked = body.is_blocked === "true";
 
-    await updateCompanyService({ ...payload, file });
+    const { count } = await updateCompanyService({ ...payload, file });
+    if (!count) {
+      return res
+        .status(NOT_UPDATED_NOT_FOUND.code)
+        .json({ message: NOT_UPDATED_NOT_FOUND.message });
+    }
 
     return res.status(204).json({});
   },

@@ -11,8 +11,11 @@ import { userRepository } from "./repository";
 import {
   CreateUserPayload,
   DeleteUserByIdPayload,
+  FindUserByEmailPayload,
   FindUserByIdPayload,
-  ListAllIgnoreIdPayload,
+  FindUserByUsernameOrEmailPayload,
+  FindUserByUsernamePayload,
+  ListAllPayload,
   ResetPasswordPayload,
   UpdatePasswordPayload,
   UpdateUserData,
@@ -25,7 +28,7 @@ const {
   findById,
   findByUserNameOrEmail,
   updateById,
-  listAllIgnoreId,
+  listAll,
   deleteById,
   create,
 } = userRepository;
@@ -38,20 +41,20 @@ const userService = {
     return findById(payload);
   },
 
-  getUserByUsernameService(username: string) {
-    return findByUserName(username);
+  getUserByUsernameService(payload: FindUserByUsernamePayload) {
+    return findByUserName(payload);
   },
 
-  getUserByEmailService(email: string) {
-    return findByEmail(email);
+  getUserByEmailService(payload: FindUserByEmailPayload) {
+    return findByEmail(payload);
   },
 
-  getUserByUsernameOrEmailService(username: string, email: string) {
-    return findByUserNameOrEmail(username, email);
+  getUserByUsernameOrEmailService(payload: FindUserByUsernameOrEmailPayload) {
+    return findByUserNameOrEmail(payload);
   },
 
   async updateUserService(payload: UpdateUserPayload) {
-    const { id, company_id,  file, delete_image } = payload;
+    const { id, filter_by_company_id,  file, delete_image } = payload;
 
     if (file) {
       const { Location, Key } = await uploadImage(
@@ -63,7 +66,7 @@ const userService = {
       payload.image_url = Location;
       payload.image_key = Key;
     } else if (delete_image) {
-      const selectedUser = await findById({ id, company_id });
+      const selectedUser = await findById({ id, filter_by_company_id });
 
       if (selectedUser && selectedUser.image_key) {
         await deleteFile(selectedUser.image_key);
@@ -98,13 +101,6 @@ const userService = {
     return { ...newUser, password: payload.password };
   },
 
-  async updateUserPasswordService(payload: UpdatePasswordPayload) {
-    const { id, company_id, new_password } = payload;
-
-    const password = bcrypt.hashSync(new_password, ENCRYPT_SALT);
-    return updateById({ id, company_id, password });
-  },
-
   async resetUserPasswordService(payload: ResetPasswordPayload) {
     const { id, company_id, name, email, language } = payload;
 
@@ -133,8 +129,8 @@ const userService = {
     });
   },
 
-  listUsersService(payload: ListAllIgnoreIdPayload) {
-    return listAllIgnoreId(payload);
+  listUsersService(payload: ListAllPayload) {
+    return listAll(payload);
   },
 
   deleteUserService(payload: DeleteUserByIdPayload) {

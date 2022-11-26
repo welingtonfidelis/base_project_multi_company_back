@@ -25,7 +25,6 @@ const {
   getUserByEmailService,
   getUserByUsernameOrEmailService,
   updateUserService,
-  updateUserPasswordService,
   resetUserPasswordService,
   listUsersService,
   deleteUserService,
@@ -49,7 +48,7 @@ const {
   INVALID_COMPANY_ID,
   BLOCKED_COMPANY,
   NOT_UPDATED_NOT_FOUND,
-  NOT_DELETE_NOT_FOUND
+  NOT_DELETE_NOT_FOUND,
 } = HttpMessageEnum;
 
 const canApplyPermissions = (
@@ -70,10 +69,10 @@ const userController = {
     const body = req.body as LoginBody;
     const { username, password } = body;
 
-    const selectedUser = await getUserByUsernameOrEmailService(
+    const selectedUser = await getUserByUsernameOrEmailService({
       username,
-      username
-    );
+      email: username,
+    });
 
     if (!selectedUser) {
       return res
@@ -157,10 +156,10 @@ const userController = {
     const { permissions, company_id } = req.authenticated_user;
     canApplyPermissions(permissions, body.permissions);
 
-    const selectedUser = await getUserByUsernameOrEmailService(
-      body.username,
-      body.email
-    );
+    const selectedUser = await getUserByUsernameOrEmailService({
+      username: body.username,
+      email: body.email,
+    });
 
     if (selectedUser) {
       if (selectedUser.username === body.username) {
@@ -183,9 +182,9 @@ const userController = {
   },
 
   async getProfile(req: Request, res: Response) {
-    const { id, company_id } = req.authenticated_user;
+    const { id } = req.authenticated_user;
 
-    const selectedUser = await getUserByIdService({ id, company_id });
+    const selectedUser = await getUserByIdService({ id });
 
     if (!selectedUser) return res.json({});
 
@@ -201,7 +200,7 @@ const userController = {
     const { file } = req;
 
     if (username) {
-      const selectedUser = await getUserByUsernameService(username);
+      const selectedUser = await getUserByUsernameService({ username });
 
       if (selectedUser && selectedUser.id !== id) {
         return res
@@ -211,7 +210,7 @@ const userController = {
     }
 
     if (email) {
-      const selectedUser = await getUserByEmailService(email);
+      const selectedUser = await getUserByEmailService({ email });
 
       if (selectedUser && selectedUser.id !== id) {
         return res
@@ -235,7 +234,7 @@ const userController = {
     const body = req.body as UpdatePasswordBody;
     const { old_password, new_password } = body;
 
-    const selectedUser = await getUserByIdService({ id, company_id });
+    const selectedUser = await getUserByIdService({ id });
 
     if (!selectedUser) {
       return res
@@ -253,7 +252,7 @@ const userController = {
         .json({ message: INVALID_OLD_PASSWORD.message });
     }
 
-    await updateUserPasswordService({ id, company_id, new_password });
+    await updateUserService({ id, password: new_password });
 
     return res.status(204).json({});
   },
@@ -262,10 +261,10 @@ const userController = {
     const body = req.body as ResetPasswordBody;
     const { username, language } = body;
 
-    const selectedUser = await getUserByUsernameOrEmailService(
+    const selectedUser = await getUserByUsernameOrEmailService({
       username,
-      username
-    );
+      email: username,
+    });
 
     if (!selectedUser) {
       return res
@@ -290,7 +289,11 @@ const userController = {
 
     try {
       const { id, company_id } = validateToken(token, JSON_SECRET) as any;
-      await updateUserPasswordService({ id, company_id, new_password });
+      await updateUserService({
+        id,
+        password: new_password,
+        filter_by_company_id: company_id,
+      });
 
       return res.status(204).json({});
     } catch (error) {
@@ -312,12 +315,12 @@ const userController = {
       : undefined;
 
     const users = await listUsersService({
-      company_id,
       logged_user_id: id,
       page,
       limit,
       filter_by_id,
       filter_by_name,
+      filter_by_company_id: company_id,
     });
     const response = {
       ...users,
@@ -334,7 +337,10 @@ const userController = {
     const id = parseInt(req.params.id);
     const { company_id } = req.authenticated_user;
 
-    const selectedUser = await getUserByIdService({ id, company_id });
+    const selectedUser = await getUserByIdService({
+      id,
+      filter_by_company_id: company_id,
+    });
 
     if (!selectedUser) return res.status(404).json({});
 
@@ -356,7 +362,7 @@ const userController = {
     }
 
     if (username) {
-      const selectedUser = await getUserByUsernameService(username);
+      const selectedUser = await getUserByUsernameService({ username });
 
       if (selectedUser && selectedUser.id !== id) {
         return res
@@ -366,7 +372,7 @@ const userController = {
     }
 
     if (email) {
-      const selectedUser = await getUserByEmailService(email);
+      const selectedUser = await getUserByEmailService({ email });
 
       if (selectedUser && selectedUser.id !== id) {
         return res

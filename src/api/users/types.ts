@@ -55,18 +55,18 @@ export type CreateUserPayload = {
 };
 
 export type UpdateUserPayload = {
-  company_id: number;
   id: number;
   name?: string;
   email?: string;
   username?: string;
   password?: string;
-  image_url: string;
-  image_key: string;
+  image_url?: string;
+  image_key?: string;
   is_blocked?: boolean;
   permissions?: Role[]
   delete_image?: boolean;
   file?: Express.Multer.File;
+  filter_by_company_id?: number;
 };
 
 export type UpdatePasswordPayload = {
@@ -88,18 +88,35 @@ export type UpdateResetedPasswordPayload = {
   new_password: string;
 };
 
-export type ListAllIgnoreIdPayload = {
-  company_id: number;
+export type ListAllPayload = {
   logged_user_id: number;
   page: number;
   limit: number;
   filter_by_id?: number;
   filter_by_name?: string;
+  filter_by_company_id?: number;
+  filter_by_company_name?: string;
 };
 
 export type FindUserByIdPayload = {
   id: number;
-  company_id: number;
+  filter_by_company_id?: number;
+}
+
+export type FindUserByUsernamePayload = {
+  username: string;
+  filter_by_company_id?: number;
+}
+
+export type FindUserByEmailPayload = {
+  email: string;
+  filter_by_company_id?: number;
+}
+
+export type FindUserByUsernameOrEmailPayload = {
+  username: string;
+  email: string;
+  filter_by_company_id?: number;
 }
 
 export type DeleteUserByIdPayload = {
@@ -121,8 +138,9 @@ export type CreateUserData = {
 };
 
 export type UpdateUserData = {
-  company_id: number;
   id: number;
+  filter_by_company_id?: number;
+  company_id?: number;
   name?: string;
   email?: string;
   username?: string;
@@ -135,16 +153,33 @@ export type UpdateUserData = {
 
 export type FindUserByIdData = {
   id: number;
-  company_id: number;
+  filter_by_company_id?: number;
 }
 
-export type ListAllIgnoreIdData = {
-  company_id: number;
+export type FindUserByUsernameData = {
+  username: string;
+  filter_by_company_id?: number;
+}
+
+export type FindUserByEmailData = {
+  email: string;
+  filter_by_company_id?: number;
+}
+
+export type FindUserByUsernameOrEmailData = {
+  username: string;
+  email: string;
+  filter_by_company_id?: number;
+}
+
+export type ListAllData = {
   logged_user_id: number;
   page: number;
   limit: number;
   filter_by_id?: number;
   filter_by_name?: string;
+  filter_by_company_id?: number;
+  filter_by_company_name?: string;
 };
 
 export type DeleteUserByIdData = {

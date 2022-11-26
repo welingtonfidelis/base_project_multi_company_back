@@ -2,40 +2,70 @@ import { prisma } from "../../dbCLient";
 import {
   CreateUserData,
   DeleteUserByIdData,
+  FindUserByUsernameOrEmailData,
+  FindUserByEmailData,
   FindUserByIdData,
-  ListAllIgnoreIdData,
+  ListAllData,
   UpdateUserData,
+  FindUserByUsernameData,
 } from "./types";
 
 const userRepository = {
-  findByUserName(username: string) {
-    return prisma.user.findFirst({
-      where: { username },
-    });
+  findByUserName(data: FindUserByUsernameData) {
+    const { username, filter_by_company_id } = data;
+    const where: any = { AND: [{ username }] };
+
+    if (filter_by_company_id) {
+      where.AND.push({ company_id: filter_by_company_id });
+    }
+
+    return prisma.user.findFirst({ where });
   },
 
-  findByEmail(email: string) {
-    return prisma.user.findFirst({
-      where: { email },
-    });
+  findByEmail(data: FindUserByEmailData) {
+    const { email, filter_by_company_id } = data;
+    const where: any = { AND: [{ email }] };
+
+    if (filter_by_company_id) {
+      where.AND.push({ company_id: filter_by_company_id });
+    }
+
+    return prisma.user.findFirst({ where });
   },
 
-  findByUserNameOrEmail(username: string, email: string) {
-    return prisma.user.findFirst({
-      where: { OR: [{ username }, { email }] },
-    });
+  findByUserNameOrEmail(data: FindUserByUsernameOrEmailData) {
+    const { username, email, filter_by_company_id } = data;
+    const where: any = { AND: [{ OR: [{ username }, { email }] }] };
+
+    if (filter_by_company_id) {
+      where.AND.push({ company_id: filter_by_company_id });
+    }
+
+    return prisma.user.findFirst({ where });
   },
 
   findById(data: FindUserByIdData) {
-    const { id, company_id } = data;
-    return prisma.user.findFirst({ where: { AND: [{ company_id }, { id }] } });
+    const { id, filter_by_company_id } = data;
+    const where: any = { AND: [{ id }] };
+
+    if (filter_by_company_id) {
+      where.AND.push({ company_id: filter_by_company_id });
+    }
+
+    return prisma.user.findFirst({ where });
   },
 
-  updateById(payload: UpdateUserData) {
-    const { id, company_id, ...data } = payload;
+  updateById(data: UpdateUserData) {
+    const { id, filter_by_company_id, ...rest } = data;
+    const where: any = { AND: [{ id }] };
+
+    if (filter_by_company_id) {
+      where.AND.push({ company_id: filter_by_company_id });
+    }
+
     return prisma.user.updateMany({
-      where: { AND: [{ company_id }, { id }] },
-      data,
+      where,
+      data: rest,
     });
   },
 
@@ -43,18 +73,19 @@ const userRepository = {
     return prisma.user.create({ data });
   },
 
-  async listAllIgnoreId(payload: ListAllIgnoreIdData) {
+  async listAll(payload: ListAllData) {
     const {
-      company_id,
       logged_user_id,
       page,
       limit,
       filter_by_id,
       filter_by_name,
+      filter_by_company_id,
+      filter_by_company_name,
     } = payload;
     const offset = (page - 1) * limit;
 
-    const where: any = { AND: [{ company_id }] };
+    const where: any = { AND: [] };
 
     if (filter_by_id && filter_by_id !== logged_user_id) {
       where.AND.push({ id: filter_by_id });
@@ -63,6 +94,18 @@ const userRepository = {
     if (filter_by_name) {
       where.AND.push({
         name: { contains: filter_by_name, mode: "insensitive" },
+      });
+    }
+
+    if (filter_by_company_id) {
+      where.AND.push({ company_id: filter_by_company_id });
+    }
+
+    if (filter_by_company_name) {
+      where.AND.push({
+        company: {
+          name: { contains: filter_by_company_name, mode: "insensitive" },
+        },
       });
     }
 
