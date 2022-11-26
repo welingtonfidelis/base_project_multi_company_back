@@ -230,7 +230,7 @@ const userController = {
   },
 
   async updateProfilePassword(req: Request, res: Response) {
-    const { id, company_id } = req.authenticated_user;
+    const { id } = req.authenticated_user;
     const body = req.body as UpdatePasswordBody;
     const { old_password, new_password } = body;
 
@@ -325,7 +325,7 @@ const userController = {
     const response = {
       ...users,
       users: users.users.map((item) => {
-        const { password, updated_at, ...rest } = item;
+        const { password, updated_at, company, ...rest } = item;
         return rest;
       }),
     };

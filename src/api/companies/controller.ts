@@ -7,6 +7,8 @@ import {
   UpdateCompanyPayload,
 } from "./types";
 import { HttpMessageEnum } from "../../shared/enum/httpMessage";
+import { userService } from "../users/service";
+import { UpdateUserBody, UpdateUserPayload } from "../users/types";
 
 const {
   createCompanyService,
@@ -16,15 +18,23 @@ const {
   getCompanyByEmailService,
   updateCompanyService,
 } = companyService;
+const {
+  listUsersService,
+  updateUserService,
+  getUserByEmailService,
+  getUserByUsernameService,
+} = userService;
 
 const {
   CAN_NOT_BLOCK_YOURSELF_COMPANY,
   NAME_ALREADY_USED,
   EMAIL_ALREADY_USED,
+  USERNAME_ALREADY_USED,
   NOT_UPDATED_NOT_FOUND,
 } = HttpMessageEnum;
 
 const companyController = {
+  // COMPANIES
   async create(req: Request, res: Response) {
     const body = req.body as CreateCompanyBody;
     const { file } = req;
@@ -131,6 +141,85 @@ const companyController = {
     if (body.is_blocked) payload.is_blocked = body.is_blocked === "true";
 
     const { count } = await updateCompanyService({ ...payload, file });
+    if (!count) {
+      return res
+        .status(NOT_UPDATED_NOT_FOUND.code)
+        .json({ message: NOT_UPDATED_NOT_FOUND.message });
+    }
+
+    return res.status(204).json({});
+  },
+
+  // USERS
+  async listUsers(req: Request, res: Response) {
+    const { id } = req.authenticated_user;
+    const page = parseInt(req.query.page as string);
+    const limit = parseInt(req.query.limit as string);
+    const filter_by_id = req.query.filter_by_id
+      ? parseInt(req.query.filter_by_id as string)
+      : undefined;
+    const filter_by_name = req.query.filter_by_name
+      ? (req.query.filter_by_name as string)
+      : undefined;
+    const filter_by_company_id = req.query.filter_by_company_id
+      ? parseInt(req.query.filter_by_company_id as string)
+      : undefined;
+    const filter_by_company_name = req.query.filter_by_company_name
+    ? (req.query.filter_by_company_name as string)
+    : undefined;
+
+    const users = await listUsersService({
+      logged_user_id: id,
+      page,
+      limit,
+      filter_by_id,
+      filter_by_name,
+      filter_by_company_name,
+      filter_by_company_id,
+    });
+    const response = {
+      ...users,
+      users: users.users.map((item) => {
+        const { password, updated_at, ...rest } = item;
+        return rest;
+      }),
+    };
+
+    return res.json(response);
+  },
+
+  async updateUser(req: Request, res: Response) {
+    const id = parseInt(req.params.id);
+    const body = req.body as UpdateUserBody;
+    const { username, email, is_blocked, delete_image } = body;
+    const { file } = req;
+
+    if (username) {
+      const selectedUser = await getUserByUsernameService({ username });
+
+      if (selectedUser && selectedUser.id !== id) {
+        return res
+          .status(USERNAME_ALREADY_USED.code)
+          .json({ message: USERNAME_ALREADY_USED.message });
+      }
+    }
+
+    if (email) {
+      const selectedUser = await getUserByEmailService({ email });
+
+      if (selectedUser && selectedUser.id !== id) {
+        return res
+          .status(EMAIL_ALREADY_USED.code)
+          .json({ message: EMAIL_ALREADY_USED.message });
+      }
+    }
+
+    const payload = { ...body, file, id } as UpdateUserPayload;
+
+    if (is_blocked) payload.is_blocked = is_blocked === "true";
+    if (delete_image) payload.delete_image = delete_image === "true";
+
+    const { count } = await updateUserService(payload);
     if (!count) {
       return res
         .status(NOT_UPDATED_NOT_FOUND.code)

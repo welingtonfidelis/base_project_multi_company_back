@@ -118,6 +118,7 @@ const userRepository = {
       orderBy: {
         name: "asc",
       },
+      include: { company: true },
     });
 
     return { users, total };

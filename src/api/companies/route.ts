@@ -8,6 +8,8 @@ import {
   listSchema,
   updateSchema,
   createSchema,
+  listUsersSchema,
+  updateUserSchema,
 } from "./midleware/requestPayloadValidateSchema";
 import { permissionValidate } from "../../shared/middleware/permissionValidate";
 import { Role } from "@prisma/client";
@@ -15,12 +17,25 @@ import { Role } from "@prisma/client";
 const { ADMIN } = Role;
 
 const companyRouter = Router();
-const { list, getById, update, create } = companyController;
+const { list, listUsers, updateUser, getById, update, create } = companyController;
 
 // AUTHENTICATED ROUTES
 // ROUTES WITH PERMISSION VALIDATE
 companyRouter.use(permissionValidate([ADMIN]));
 
+// USERS
+companyRouter.get(
+  "/companies/users",
+  payloadValidate(listUsersSchema),
+  listUsers
+);
+companyRouter.patch(
+  "/companies/users/:id",
+  payloadValidate(updateUserSchema),
+  updateUser
+);
+
+// COMPANIES
 companyRouter.get("/companies", payloadValidate(listSchema), list);
 companyRouter.get("/companies/:id", payloadValidate(getByIdSchema), getById);
 companyRouter.patch(
