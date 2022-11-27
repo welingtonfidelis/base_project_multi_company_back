@@ -304,7 +304,7 @@ const userController = {
   },
 
   async list(req: Request, res: Response) {
-    const { id, company_id } = req.authenticated_user;
+    const { id, company_id, permissions } = req.authenticated_user;
     const page = parseInt(req.query.page as string);
     const limit = parseInt(req.query.limit as string);
     const filter_by_id = req.query.filter_by_id
@@ -322,6 +322,11 @@ const userController = {
       filter_by_name,
       filter_by_company_id: company_id,
     });
+
+    if (!permissions.includes(ADMIN)) {
+      users.users = users.users.filter((item) => !item.permissions.includes(ADMIN));
+    }
+
     const response = {
       ...users,
       users: users.users.map((item) => {

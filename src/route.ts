@@ -15,10 +15,10 @@ router.use(userNoAuthRouter);
 
 // AUTHENTICATED ROUTES
 router.use(authValidate);
-router.use(userRouter);
-router.use(companyRouter);
+router.use(httpMessageRouter); // no role requested
+router.use(userRouter); // ADMIN/MANAGER role requested below
 router.use(permissionRouter);
-router.use(httpMessageRouter);
+router.use(companyRouter); // only ADMIN role can access below
 
 // ERROR HANDLER
 router.use((error: any, req: Request, res: Response, next: NextFunction) => {
