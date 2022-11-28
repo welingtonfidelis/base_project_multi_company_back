@@ -31,6 +31,7 @@ const {
   EMAIL_ALREADY_USED,
   USERNAME_ALREADY_USED,
   NOT_UPDATED_NOT_FOUND,
+  COMPANY_NOT_FOUND,
 } = HttpMessageEnum;
 
 const companyController = {
@@ -94,11 +95,31 @@ const companyController = {
   async getById(req: Request, res: Response) {
     const id = parseInt(req.params.id);
 
-    const selectedUser = await getCompanyByIdService(id);
+    const selectedCompany = await getCompanyByIdService(id);
 
-    if (!selectedUser) return res.status(404).json({});
+    if (!selectedCompany) {
+      return res
+        .status(COMPANY_NOT_FOUND.code)
+        .json({ message: COMPANY_NOT_FOUND.message });
+    }
 
-    const { updated_at, ...rest } = selectedUser;
+    const { updated_at, ...rest } = selectedCompany;
+
+    return res.json(rest);
+  },
+
+  async getProfile(req: Request, res: Response) {
+    const { company_id } = req.authenticated_user;
+
+    const selectedCompany = await getCompanyByIdService(company_id);
+
+    if (!selectedCompany) {
+      return res
+        .status(COMPANY_NOT_FOUND.code)
+        .json({ message: COMPANY_NOT_FOUND.message });
+    }
+
+    const { updated_at, ...rest } = selectedCompany;
 
     return res.json(rest);
   },
@@ -165,8 +186,8 @@ const companyController = {
       ? parseInt(req.query.filter_by_company_id as string)
       : undefined;
     const filter_by_company_name = req.query.filter_by_company_name
-    ? (req.query.filter_by_company_name as string)
-    : undefined;
+      ? (req.query.filter_by_company_name as string)
+      : undefined;
 
     const users = await listUsersService({
       logged_user_id: id,

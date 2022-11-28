@@ -130,18 +130,9 @@ const userController = {
       name: selectedUser.name,
       email: selectedUser.email,
       permissions: selectedUser.permissions,
-      image_url: selectedUser.image_url,
     };
-    const company = {
-      id: selectedCompany.id,
-      name: selectedCompany.name,
-      name_key: selectedCompany.name_key,
-      email: selectedCompany.email,
-      phone: selectedCompany.phone,
-      image_url: selectedCompany.image_url,
-    };
-
-    return res.json({ user, company });
+    
+    return res.json(user);
   },
 
   logout(req: Request, res: Response) {
@@ -186,7 +177,11 @@ const userController = {
 
     const selectedUser = await getUserByIdService({ id });
 
-    if (!selectedUser) return res.json({});
+    if (!selectedUser) {
+      return res
+        .status(USER_NOT_FOUND.code)
+        .json({ message: USER_NOT_FOUND.message });
+    }
 
     const { password, updated_at, ...rest } = selectedUser;
 
@@ -324,7 +319,9 @@ const userController = {
     });
 
     if (!permissions.includes(ADMIN)) {
-      users.users = users.users.filter((item) => !item.permissions.includes(ADMIN));
+      users.users = users.users.filter(
+        (item) => !item.permissions.includes(ADMIN)
+      );
     }
 
     const response = {

@@ -17,9 +17,12 @@ import { Role } from "@prisma/client";
 const { ADMIN } = Role;
 
 const companyRouter = Router();
-const { list, listUsers, updateUser, getById, update, create } = companyController;
+const { list, listUsers, updateUser, getById, getProfile, update, create } =
+  companyController;
 
 // AUTHENTICATED ROUTES
+companyRouter.get("/companies/profile", getProfile);
+
 // ROUTES WITH PERMISSION VALIDATE
 companyRouter.use(permissionValidate([ADMIN]));
 

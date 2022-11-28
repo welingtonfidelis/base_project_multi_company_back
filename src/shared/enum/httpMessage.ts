@@ -106,4 +106,10 @@ export const HttpMessageEnum = {
     code: 400,
     use: "/companies;",
   },
+  COMPANY_NOT_FOUND: {
+    name: "COMPANY_NOT_FOUND",
+    message: "Company not found",
+    code: 404,
+    use: "/companies;",
+  },
 };
