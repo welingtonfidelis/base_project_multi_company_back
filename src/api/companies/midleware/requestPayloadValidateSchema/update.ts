@@ -5,7 +5,7 @@ const updateSchema = Joi.object({
   name: Joi.string(),
   email: Joi.string().email(),
   phone: Joi.string(),
-  is_blocked: Joi.string().valid('true', 'false'),
+  is_blocked: Joi.boolean().allow(Joi.string().valid('true', 'false')),
 });
 
 export { updateSchema };

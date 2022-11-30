@@ -1,4 +1,4 @@
-import { Role, User } from "@prisma/client";
+import { Role } from "@prisma/client";
 
 // CONTROLLER
 export type CreateUserBody = {
@@ -18,9 +18,9 @@ export type UpdateUserBody = {
   password?: string;
   image_url?: string;
   image_key?: string;
-  is_blocked?: "true" | "false";
+  is_blocked?: "true" | "false" | boolean;
   permissions?: Role[]
-  delete_image?: "true" | "false";
+  delete_image?: "true" | "false" | boolean;
 };
 
 export type LoginBody = {

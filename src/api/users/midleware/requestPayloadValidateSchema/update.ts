@@ -8,7 +8,8 @@ const updateSchema = Joi.object({
   email: Joi.string().email(),
   password: Joi.string().min(3),
   permissions: Joi.array().items(Joi.string().valid(...Object.values(Role))),
-  is_blocked: Joi.boolean(),
+  is_blocked: Joi.boolean().allow(Joi.string().valid('true', 'false')),
+  delete_image: Joi.boolean().allow(Joi.string().valid('true', 'false')),
 });
 
 export { updateSchema };

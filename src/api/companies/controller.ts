@@ -1,14 +1,17 @@
 import { Request, Response } from "express";
+import isUndefined from "lodash/isUndefined";
 
 import { companyService } from "./service";
 import {
   CreateCompanyBody,
+  CreateCompanyPayload,
   UpdateCompanyBody,
   UpdateCompanyPayload,
 } from "./types";
 import { HttpMessageEnum } from "../../shared/enum/httpMessage";
 import { userService } from "../users/service";
 import { UpdateUserBody, UpdateUserPayload } from "../users/types";
+import { parseToBoolean } from "../../shared/utils";
 
 const {
   createCompanyService,
@@ -56,11 +59,13 @@ const companyController = {
         .json({ message: EMAIL_ALREADY_USED.message });
     }
 
-    const newCompany = await createCompanyService({
+    const payload = {
       ...body,
-      is_blocked: body.is_blocked === "true",
       file,
-    });
+      is_blocked: parseToBoolean(body.is_blocked),
+    } as CreateCompanyPayload;
+
+    const newCompany = await createCompanyService(payload);
 
     const { company, user } = newCompany;
     const { id: company_id } = company;
@@ -129,7 +134,7 @@ const companyController = {
     const { company_id: loggedUserCompanyId } = req.authenticated_user;
     const body = req.body as UpdateCompanyBody;
     const { file } = req;
-    const { is_blocked, name, email } = body;
+    const { is_blocked, name, email, delete_image } = body;
 
     if (is_blocked && id === loggedUserCompanyId) {
       return res
@@ -159,7 +164,13 @@ const companyController = {
 
     const payload = { ...body, id } as UpdateCompanyPayload;
 
-    if (body.is_blocked) payload.is_blocked = body.is_blocked === "true";
+    if (!isUndefined(is_blocked)) {
+      payload.is_blocked = parseToBoolean(is_blocked);
+    }
+
+    if (!isUndefined(delete_image)) {
+      payload.delete_image = parseToBoolean(delete_image);
+    }
 
     const { count } = await updateCompanyService({ ...payload, file });
     if (!count) {
@@ -237,8 +248,13 @@ const companyController = {
 
     const payload = { ...body, file, id } as UpdateUserPayload;
 
-    if (is_blocked) payload.is_blocked = is_blocked === "true";
-    if (delete_image) payload.delete_image = delete_image === "true";
+    if (!isUndefined(is_blocked)) {
+      payload.is_blocked = parseToBoolean(is_blocked);
+    }
+
+    if (!isUndefined(delete_image)) {
+      payload.delete_image = parseToBoolean(delete_image);
+    }
 
     const { count } = await updateUserService(payload);
     if (!count) {

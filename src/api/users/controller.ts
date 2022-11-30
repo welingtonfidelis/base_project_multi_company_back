@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import dateFnsAdd from "date-fns/add";
 import bcrypt from "bcryptjs";
+import isUndefined from "lodash/isUndefined";
 
 import { userService } from "./service";
 import { companyService } from "../companies/service";
@@ -18,6 +19,7 @@ import {
 import { Role } from "@prisma/client";
 import { AppError } from "../../errors/AppError";
 import { HttpMessageEnum } from "../../shared/enum/httpMessage";
+import { parseToBoolean } from "../../shared/utils";
 
 const {
   getUserByIdService,
@@ -131,7 +133,7 @@ const userController = {
       email: selectedUser.email,
       permissions: selectedUser.permissions,
     };
-    
+
     return res.json(user);
   },
 
@@ -216,8 +218,9 @@ const userController = {
 
     const payload = { ...body, file, id } as UpdateUserPayload;
 
-    if (body.is_blocked) payload.is_blocked = body.is_blocked === "true";
-    if (body.delete_image) payload.delete_image = body.delete_image === "true";
+    if (!isUndefined(body.delete_image)) {
+      payload.delete_image = parseToBoolean(body.delete_image);
+    }
 
     await updateUserService(payload);
 
@@ -383,10 +386,20 @@ const userController = {
       }
     }
 
-    const payload = { ...body, file, id, company_id } as UpdateUserPayload;
+    const payload = {
+      ...body,
+      file,
+      id,
+      filter_by_company_id: company_id,
+    } as UpdateUserPayload;
 
-    if (is_blocked) payload.is_blocked = is_blocked === "true";
-    if (delete_image) payload.delete_image = delete_image === "true";
+    if (!isUndefined(is_blocked)) {
+      payload.is_blocked = parseToBoolean(is_blocked)
+    }
+
+    if (!isUndefined(delete_image)) {
+      payload.delete_image = parseToBoolean(delete_image);
+    }
 
     const { count } = await updateUserService(payload);
     if (!count) {

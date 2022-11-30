@@ -5,12 +5,12 @@ export type CreateCompanyBody = {
   name: string;
   email: string;
   phone: string;
-  is_blocked: "true" | "false";
+  is_blocked: "true" | "false" | boolean;
 };
 
 export type UpdateCompanyBody = Partial<Company> & {
-  delete_image?: "true" | "false";
-  is_blocked?: "true" | "false";
+  delete_image?: "true" | "false" | boolean;
+  is_blocked?: "true" | "false" | boolean;
 };
 
 // SERVICE
