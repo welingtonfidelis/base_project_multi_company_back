@@ -8,7 +8,10 @@ export type CreateCompanyBody = {
   is_blocked: "true" | "false" | boolean;
 };
 
-export type UpdateCompanyBody = Partial<Company> & {
+export type UpdateCompanyBody = {
+  name?: string;
+  email?: string;
+  phone?: string;
   delete_image?: "true" | "false" | boolean;
   is_blocked?: "true" | "false" | boolean;
 };
@@ -22,8 +25,14 @@ export type CreateCompanyPayload = {
   file?: Express.Multer.File;
 };
 
-export type UpdateCompanyPayload = Partial<Company> & {
+export type UpdateCompanyPayload = {
   id: number;
+  name?: string;
+  email?: string;
+  phone?: string;
+  image_url?: string;
+  image_key?: string;
+  name_key?: string;
   delete_image?: boolean;
   is_blocked?: boolean;
   file?: Express.Multer.File;
@@ -46,8 +55,14 @@ export type CreateCompanyData = {
   is_blocked: boolean;
 };
 
-export type UpdateCompanyData = Partial<Company> & {
+export type UpdateCompanyData = {
   id: number;
+  name?: string;
+  email?: string;
+  phone?: string;
+  image_url?: string;
+  image_key?: string;
+  is_blocked?: boolean;
 };
 
 export type ListAllData = {

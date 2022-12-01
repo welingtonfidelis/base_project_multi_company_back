@@ -12,8 +12,15 @@ import {
 
 const { MANAGER, USER } = Role;
 const { createUserService } = userService;
-const { findById, findByNameKey, findByEmail, updateById, deleteById, create, listAll } =
-  companyRepository;
+const {
+  findById,
+  findByNameKey,
+  findByEmail,
+  updateById,
+  deleteById,
+  create,
+  listAll,
+} = companyRepository;
 
 const companyService = {
   getCompanyByIdService(id: number) {
@@ -62,21 +69,21 @@ const companyService = {
   },
 
   async createCompanyService(payload: CreateCompanyPayload) {
-    const name_key = toSnakeCase(payload.name);
+    const { file, ...data } = payload;
+    const name_key = toSnakeCase(data.name);
     const image_url = "";
     const image_key = "";
 
     const newCompany = await create({
-      ...payload,
+      ...data,
       name_key,
       image_url,
       image_key,
     });
 
-    const { file } = payload;
     if (file) {
       const { id } = newCompany;
-      await this.updateCompanyService({ id, file });
+      await companyService.updateCompanyService({ id, file });
     }
 
     const newUser = await createUserService({

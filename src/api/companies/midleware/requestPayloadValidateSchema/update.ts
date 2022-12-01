@@ -6,6 +6,7 @@ const updateSchema = Joi.object({
   email: Joi.string().email(),
   phone: Joi.string(),
   is_blocked: Joi.boolean().allow(Joi.string().valid('true', 'false')),
+  delete_image: Joi.boolean().allow(Joi.string().valid('true', 'false')),
 });
 
 export { updateSchema };

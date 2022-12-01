@@ -136,7 +136,7 @@ const companyController = {
     const { file } = req;
     const { is_blocked, name, email, delete_image } = body;
 
-    if (is_blocked && id === loggedUserCompanyId) {
+    if (parseToBoolean(is_blocked) && id === loggedUserCompanyId) {
       return res
         .status(CAN_NOT_BLOCK_YOURSELF_COMPANY.code)
         .json({ message: CAN_NOT_BLOCK_YOURSELF_COMPANY.message });
