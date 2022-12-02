@@ -208,6 +208,7 @@ const companyController = {
       filter_by_name,
       filter_by_company_name,
       filter_by_company_id,
+      include_company: true
     });
     const response = {
       ...users,

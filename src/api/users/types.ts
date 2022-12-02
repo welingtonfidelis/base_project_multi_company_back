@@ -96,6 +96,7 @@ export type ListAllPayload = {
   filter_by_name?: string;
   filter_by_company_id?: number;
   filter_by_company_name?: string;
+  include_company?: boolean;
 };
 
 export type FindUserByIdPayload = {
@@ -180,6 +181,7 @@ export type ListAllData = {
   filter_by_name?: string;
   filter_by_company_id?: number;
   filter_by_company_name?: string;
+  include_company?: boolean;
 };
 
 export type DeleteUserByIdData = {

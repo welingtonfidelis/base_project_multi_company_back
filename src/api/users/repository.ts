@@ -82,11 +82,14 @@ const userRepository = {
       filter_by_name,
       filter_by_company_id,
       filter_by_company_name,
+      include_company
     } = payload;
     const offset = (page - 1) * limit;
 
     const where: any = { AND: [] };
+    const include = { company: false };
 
+    // filters
     if (filter_by_id && filter_by_id !== logged_user_id) {
       where.AND.push({ id: filter_by_id });
     } else where.AND.push({ id: { not: logged_user_id } });
@@ -109,6 +112,11 @@ const userRepository = {
       });
     }
 
+    // relations includes
+    if (include_company) {
+      include.company = true;
+    }
+
     const total = await prisma.user.count({ where });
 
     const users = await prisma.user.findMany({
@@ -118,7 +126,7 @@ const userRepository = {
       orderBy: {
         name: "asc",
       },
-      include: { company: true },
+      include,
     });
 
     return { users, total };
