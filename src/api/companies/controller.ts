@@ -187,11 +187,11 @@ const companyController = {
     const { id } = req.authenticated_user;
     const page = parseInt(req.query.page as string);
     const limit = parseInt(req.query.limit as string);
-    const filter_by_id = req.query.filter_by_id
-      ? parseInt(req.query.filter_by_id as string)
+    const filter_by_id = req.query.filter_by_user_id
+      ? parseInt(req.query.filter_by_user_id as string)
       : undefined;
-    const filter_by_name = req.query.filter_by_name
-      ? (req.query.filter_by_name as string)
+    const filter_by_name = req.query.filter_by_user_name
+      ? (req.query.filter_by_user_name as string)
       : undefined;
     const filter_by_company_id = req.query.filter_by_company_id
       ? parseInt(req.query.filter_by_company_id as string)
