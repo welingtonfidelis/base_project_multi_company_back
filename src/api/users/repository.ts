@@ -73,7 +73,7 @@ const userRepository = {
     return prisma.user.create({ data });
   },
 
-  async listAll(payload: ListAllData) {
+  async listAll(data: ListAllData) {
     const {
       logged_user_id,
       page,
@@ -83,7 +83,7 @@ const userRepository = {
       filter_by_company_id,
       filter_by_company_name,
       include_company
-    } = payload;
+    } = data;
     const offset = (page - 1) * limit;
 
     const where: any = { AND: [] };
@@ -133,8 +133,14 @@ const userRepository = {
   },
 
   deleteById(data: DeleteUserByIdData) {
-    const { company_id, id } = data;
-    return prisma.user.deleteMany({ where: { AND: [{ company_id }, { id }] } });
+    const { id, filter_by_company_id } = data;
+    const where: any = { AND: [{ id }] };
+
+    if (filter_by_company_id) {
+      where.AND.push({ company_id: filter_by_company_id });
+    }
+
+    return prisma.user.deleteMany({ where });
   },
 };
 

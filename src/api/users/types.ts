@@ -122,7 +122,7 @@ export type FindUserByUsernameOrEmailPayload = {
 
 export type DeleteUserByIdPayload = {
   id: number;
-  company_id: number;
+  filter_by_company_id?: number;
 }
 
 // REPOSITORY
@@ -186,5 +186,5 @@ export type ListAllData = {
 
 export type DeleteUserByIdData = {
   id: number;
-  company_id: number;
+  filter_by_company_id?: number;
 }

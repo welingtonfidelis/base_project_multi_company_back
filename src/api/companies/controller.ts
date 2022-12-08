@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import isUndefined from "lodash/isUndefined";
 
 import { companyService } from "./service";
 import {
@@ -11,7 +10,7 @@ import {
 import { HttpMessageEnum } from "../../shared/enum/httpMessage";
 import { userService } from "../users/service";
 import { UpdateUserBody, UpdateUserPayload } from "../users/types";
-import { parseToBoolean } from "../../shared/utils";
+import { parseToInt } from "../../shared/utils";
 
 const {
   createCompanyService,
@@ -62,7 +61,6 @@ const companyController = {
     const payload = {
       ...body,
       file,
-      is_blocked: parseToBoolean(body.is_blocked),
     } as CreateCompanyPayload;
 
     const newCompany = await createCompanyService(payload);
@@ -75,11 +73,9 @@ const companyController = {
   },
 
   async list(req: Request, res: Response) {
-    const page = parseInt(req.query.page as string);
-    const limit = parseInt(req.query.limit as string);
-    const filter_by_name = req.query.filter_by_name
-      ? (req.query.filter_by_name as string)
-      : undefined;
+    const page = parseToInt(req.query.page) as number;
+    const limit = parseToInt(req.query.limit) as number;
+    const filter_by_name = req.query.filter_by_name as string;
 
     const companies = await listCompaniesService({
       page,
@@ -134,9 +130,9 @@ const companyController = {
     const { company_id: loggedUserCompanyId } = req.authenticated_user;
     const body = req.body as UpdateCompanyBody;
     const { file } = req;
-    const { is_blocked, name, email, delete_image } = body;
+    const { is_blocked, name, email } = body;
 
-    if (parseToBoolean(is_blocked) && id === loggedUserCompanyId) {
+    if (is_blocked && id === loggedUserCompanyId) {
       return res
         .status(CAN_NOT_BLOCK_YOURSELF_COMPANY.code)
         .json({ message: CAN_NOT_BLOCK_YOURSELF_COMPANY.message });
@@ -164,14 +160,6 @@ const companyController = {
 
     const payload = { ...body, id } as UpdateCompanyPayload;
 
-    if (!isUndefined(is_blocked)) {
-      payload.is_blocked = parseToBoolean(is_blocked);
-    }
-
-    if (!isUndefined(delete_image)) {
-      payload.delete_image = parseToBoolean(delete_image);
-    }
-
     const { count } = await updateCompanyService({ ...payload, file });
     if (!count) {
       return res
@@ -185,20 +173,12 @@ const companyController = {
   // USERS
   async listUsers(req: Request, res: Response) {
     const { id } = req.authenticated_user;
-    const page = parseInt(req.query.page as string);
-    const limit = parseInt(req.query.limit as string);
-    const filter_by_id = req.query.filter_by_user_id
-      ? parseInt(req.query.filter_by_user_id as string)
-      : undefined;
-    const filter_by_name = req.query.filter_by_user_name
-      ? (req.query.filter_by_user_name as string)
-      : undefined;
-    const filter_by_company_id = req.query.filter_by_company_id
-      ? parseInt(req.query.filter_by_company_id as string)
-      : undefined;
-    const filter_by_company_name = req.query.filter_by_company_name
-      ? (req.query.filter_by_company_name as string)
-      : undefined;
+    const page = parseToInt(req.query.page) as number;
+    const limit = parseToInt(req.query.limit) as number;
+    const filter_by_id = parseToInt(req.query.filter_by_user_id);
+    const filter_by_company_id = parseToInt(req.query.filter_by_company_id);
+    const filter_by_name = req.query.filter_by_user_name as string;
+    const filter_by_company_name = req.query.filter_by_company_name as string;
 
     const users = await listUsersService({
       logged_user_id: id,
@@ -248,14 +228,6 @@ const companyController = {
     }
 
     const payload = { ...body, file, id } as UpdateUserPayload;
-
-    if (!isUndefined(is_blocked)) {
-      payload.is_blocked = parseToBoolean(is_blocked);
-    }
-
-    if (!isUndefined(delete_image)) {
-      payload.delete_image = parseToBoolean(delete_image);
-    }
 
     const { count } = await updateUserService(payload);
     if (!count) {

@@ -8,3 +8,9 @@ export const parseToBoolean = (val?: string | boolean) => {
 
   return val === "true";
 };
+
+export const parseToInt = (val?: string) => {
+  if (isUndefined(val)) return undefined;
+
+  return parseInt(val as string);
+}
