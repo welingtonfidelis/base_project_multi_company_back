@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response, Router } from "express";
-import { companyRouter } from "./api/companies/route";
+import { companyRouter } from "./api/routes/companies";
 
-import { healthRouter } from "./api/health/route";
-import { httpMessageRouter } from "./api/httpMessages/route";
-import { permissionRouter } from "./api/permissions/route";
-import { userNoAuthRouter, userRouter } from "./api/users/route";
+import { userNoAuthRouter, userRouter } from "./api/routes/users";
 import { authValidate } from "./shared/middleware/authValidate";
+import { healthRouter } from "./api/routes/health";
+import { httpMessageRouter } from "./api/routes/httpMessages";
+import { permissionRouter } from "./api/routes/permissions";
 
 const router = Router();
 
