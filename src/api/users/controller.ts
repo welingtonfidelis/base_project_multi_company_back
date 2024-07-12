@@ -18,7 +18,6 @@ import {
 import { Role } from "@prisma/client";
 import { AppError } from "../../errors/AppError";
 import { HttpMessageEnum } from "../../shared/enum/httpMessage";
-import { parseToInt } from "../../shared/utils";
 
 const {
   getUserByIdService,
@@ -68,6 +67,7 @@ const canApplyPermissions = (
 const userController = {
   async login(req: Request, res: Response) {
     const body = req.body as LoginBody;
+    console.log('body: ', body);
     const { username, password } = body;
 
     const selectedUser = await getUserByUsernameOrEmailService({
@@ -298,9 +298,9 @@ const userController = {
 
   async list(req: Request, res: Response) {
     const { id, company_id, permissions } = req.authenticated_user;
-    const page = parseToInt(req.query.page) as number;
-    const limit = parseToInt(req.query.limit) as number;
-    const filter_by_id = parseToInt(req.query.filter_by_id);
+    const page = parseInt(req.query.page as string) ;
+    const limit = parseInt(req.query.limit as string) ;
+    const filter_by_id = parseInt(req.query.filter_by_id as string);
     const filter_by_name = req.query.filter_by_name as string;
 
     const users = await listUsersService({

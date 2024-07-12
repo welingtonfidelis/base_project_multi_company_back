@@ -73,8 +73,8 @@ const companyController = {
   },
 
   async list(req: Request, res: Response) {
-    const page = parseToInt(req.query.page) as number;
-    const limit = parseToInt(req.query.limit) as number;
+    const page = parseInt(req.query.page as string) ;
+    const limit = parseInt(req.query.limit as string) ;
     const filter_by_name = req.query.filter_by_name as string;
 
     const companies = await listCompaniesService({
@@ -173,10 +173,10 @@ const companyController = {
   // USERS
   async listUsers(req: Request, res: Response) {
     const { id } = req.authenticated_user;
-    const page = parseToInt(req.query.page) as number;
-    const limit = parseToInt(req.query.limit) as number;
-    const filter_by_id = parseToInt(req.query.filter_by_user_id);
-    const filter_by_company_id = parseToInt(req.query.filter_by_company_id);
+    const page = parseInt(req.query.page as string) ;
+    const limit = parseInt(req.query.limit as string) ;
+    const filter_by_id = parseInt(req.query.filter_by_user_id as string);
+    const filter_by_company_id = parseInt(req.query.filter_by_company_id as string);
     const filter_by_name = req.query.filter_by_user_name as string;
     const filter_by_company_name = req.query.filter_by_company_name as string;
 

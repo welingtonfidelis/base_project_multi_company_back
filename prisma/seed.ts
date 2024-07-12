@@ -27,7 +27,7 @@ async function main() {
   });
 
   // ===== USERS ===== //
-  const usersA = [
+  const users = [
     {
       name: "Admin",
       username: "admin",
@@ -39,33 +39,29 @@ async function main() {
       company_id: 1,
       permissions: [ADMIN, MANAGER, USER],
     },
-    // {
-    //   name: "Gerente",
-    //   email: "gerente@email.com",
-    //   username: "gerente",
-    //   password: bcrypt.hashSync("gerente", Number(ENCRYPT_SALT)),
-    //   image_url: '',
-    //   image_key: '',
-    //   is_blocked: false,
-    //   permissions: [MANAGER, USER],
-    // },
+    {
+      name: "Gerente",
+      email: "gerente@email.com",
+      username: "gerente",
+      password: bcrypt.hashSync("gerente", Number(ENCRYPT_SALT)),
+      image_url: "",
+      image_key: "",
+      is_blocked: false,
+      company_id: 1,
+      permissions: [MANAGER, USER],
+    },
+    {
+      name: "Usuário",
+      email: "usuario@email.com",
+      username: "usuario",
+      password: bcrypt.hashSync("usuario", Number(ENCRYPT_SALT)),
+      image_url: "",
+      image_key: "",
+      is_blocked: false,
+      company_id: 1,
+      permissions: [USER],
+    },
   ];
-
-  const usersB: any = [];
-  // Array(50)
-  // .fill({})
-  // .map((_, index) => ({
-  //   name: `Usuario ${index}`,
-  //   username: `usuario${index}`,
-  //   email: `usuario${index}@email.com`,
-  //   password: bcrypt.hashSync(`usuario${index}`, Number(ENCRYPT_SALT)),
-  //   image_url: '',
-  //   image_key: '',
-  //   is_blocked: index % 2 === 0,
-  //   permissions: [USER],
-  // }));
-
-  const users = [...usersA, ...usersB];
 
   await prisma.user.createMany({
     data: users,
